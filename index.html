@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>כור הכוכבים</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Karantina:wght@400;700&family=IBM+Plex+Sans+Hebrew:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: mockup bench — reviewer strip, then one 16:10 game "screen" whose views swap in place. Single dark arcade look by choice; the land of Israel brings the color. */
+:root {
+  color-scheme: dark;
+  --void: #090b17;
+  --hull: #12162c;
+  --hull-2: #1a1f3d;
+  --seam: #2b3263;
+  --fg: #e9ecff;
+  --dim: #8d95c7;
+  --forge: #ffb547;
+  --forge-ink: #2a1700;
+  --danger: #ff5c7a;
+  --ok: #5fe39a;
+  --trail-o: #ff7a1a;
+  --land: #2a3a2c;
+  --sea: #13305a;
+  --m-l: #4fd8ff;
+  --m-s: #ff8a3d;
+  --m-h: #6bff9e;
+  --m-a: #b98cff;
+  --display: "Karantina", "Secular One", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans Hebrew", "Assistant", "Segoe UI", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { background: var(--void); color: var(--fg); }
+body {
+  font-family: var(--body); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 32px;
+}
+.wrap { max-width: 1080px; margin-inline: auto; display: grid; gap: 14px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--forge); outline-offset: 2px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.coin { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--forge); font-weight: 500; }
+.coin::before { content: ""; width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe29a, var(--forge) 60%, #b86f00); box-shadow: 0 0 0 1.5px #7a4a00 inset; flex: none; }
+
+.bench { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; }
+.bench h1 { font-family: var(--display); font-size: 30px; line-height: 1; margin: 0; }
+.bench h1 small { font-family: var(--body); font-size: 13px; color: var(--dim); font-weight: 400; margin-inline-start: 8px; }
+.toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--dim); }
+.toggle input { accent-color: var(--forge); width: 16px; height: 16px; }
+.tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.tabs button { flex: none; background: transparent; border: 1px solid var(--seam); border-radius: 999px; padding: 4px 12px; font-size: 13px; color: var(--dim); }
+.tabs button[aria-current="true"] { background: var(--forge); border-color: var(--forge); color: var(--forge-ink); font-weight: 700; }
+
+.screen { position: relative; width: 100%; max-width: 100%; aspect-ratio: 16 / 10; min-height: 560px; background: radial-gradient(120% 90% at 70% 0%, #1b1f46 0%, var(--void) 60%); border: 1px solid var(--seam); border-radius: 14px; overflow: hidden; }
+#stars { position: absolute; inset: 0; width: 100%; height: 100%; }
+.view { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 26px 30px; gap: 16px; overflow-y: auto; }
+.view[hidden] { display: none !important; }
+.v-title { font-family: var(--display); font-size: 46px; line-height: .95; margin: 0; text-wrap: balance; }
+.v-sub { color: var(--dim); margin: 0; max-width: 60ch; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.back { background: none; border: 1px solid var(--seam); border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--dim); }
+.btn { border: 1px solid var(--seam); background: var(--hull); border-radius: 10px; padding: 10px 18px; font-weight: 500; }
+.btn:hover { border-color: var(--dim); }
+.btn.primary { background: var(--forge); border-color: var(--forge); color: var(--forge-ink); font-weight: 700; }
+.btn.big { font-size: 18px; padding: 14px 22px; }
+.btn.locked { opacity: .55; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.banner { background: #3a2e05; border: 1px solid #7a5d0c; color: #ffd98a; padding: 8px 12px; border-radius: 8px; font-size: 13px; }
+.toast { position: absolute; inset-inline: 0; top: 18px; margin-inline: auto; width: max-content; max-width: 90%; background: var(--hull-2); border: 1px solid var(--forge); padding: 8px 16px; border-radius: 999px; font-size: 14px; z-index: 6; }
+.panel { background: var(--hull); border: 1px solid var(--seam); border-radius: 12px; padding: 14px 16px; min-width: 0; }
+.panel h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: 1.5px; color: var(--dim); font-weight: 500; }
+.notes { color: var(--dim); font-size: 13px; margin: 0; }
+.notes b { color: var(--fg); font-weight: 500; }
+
+/* home */
+.home { justify-content: center; align-items: flex-start; padding-inline: 56px; }
+.logo { font-family: var(--display); font-weight: 700; font-size: clamp(64px, 11vw, 112px); line-height: .82; margin: 0; }
+.logo span { color: var(--forge); display: block; }
+.home-menu { display: grid; gap: 8px; min-width: 300px; }
+.home-menu .btn { text-align: start; display: flex; justify-content: space-between; gap: 18px; align-items: center; }
+.home-menu .btn em { font-style: normal; font-size: 13px; opacity: .75; }
+.home-side { position: absolute; inset-inline-end: 30px; bottom: 26px; text-align: end; display: grid; gap: 4px; justify-items: end; color: var(--dim); font-size: 13px; }
+.home-side .coin { font-size: 24px; }
+
+/* map */
+.mapwrap { display: grid; grid-template-columns: minmax(180px, 250px) 1fr; gap: 22px; flex: 1; min-height: 0; }
+.mapsvg { height: 100%; max-height: 470px; width: 100%; }
+.stages { display: grid; gap: 6px; align-content: start; }
+.st { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; background: var(--hull); border: 1px solid var(--seam); border-radius: 10px; padding: 7px 12px; text-align: start; }
+.st .n { font-family: var(--mono); font-size: 12px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--seam); }
+.st .t { font-weight: 500; }
+.st .t small { display: block; color: var(--dim); font-weight: 400; font-size: 12px; }
+.st .s { color: var(--forge); letter-spacing: 2px; font-size: 13px; }
+.st.done .n { background: var(--trail-o); border-color: var(--trail-o); color: var(--forge-ink); }
+.st.cur { border-color: var(--forge); box-shadow: 0 0 0 1px var(--forge) inset; }
+.st.cur .n { border-color: var(--forge); color: var(--forge); }
+.st.lock { opacity: .45; }
+.st.shake { animation: shake .35s; }
+@keyframes shake { 25% { transform: translateX(-5px) } 75% { transform: translateX(5px) } }
+
+/* stage card */
+.stops { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.stop { display: grid; gap: 6px; min-width: 0; }
+.stop canvas { width: 100%; aspect-ratio: 16/10; border-radius: 10px; border: 1px solid var(--seam); display: block; }
+.stop span { font-size: 13px; }
+.stop small { color: var(--dim); font-family: var(--mono); font-size: 11px; }
+
+/* quiz */
+.quiz { align-items: center; text-align: center; }
+.qbar { width: 100%; display: flex; align-items: center; gap: 14px; }
+.timer { flex: 1; height: 10px; background: var(--seam); border-radius: 5px; overflow: hidden; }
+.timer i { display: block; height: 100%; background: var(--ok); width: 100%; transition: width 1s linear, background .3s; }
+.timer.low i { background: var(--danger); }
+.tsec { font-family: var(--mono); font-size: 22px; min-width: 52px; }
+.qmeta { display: flex; justify-content: space-between; width: 100%; color: var(--dim); font-size: 14px; }
+.qtext { font-family: var(--display); font-size: clamp(54px, 9vw, 92px); line-height: 1; margin: 12px 0 4px; direction: ltr; unicode-bidi: isolate; }
+.qtext.word { font-family: var(--body); font-size: 26px; line-height: 1.4; direction: rtl; max-width: 34ch; }
+.qhint { color: var(--dim); font-size: 13px; margin: 0; }
+.answers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; width: min(680px, 100%); margin-top: 10px; }
+.ans { position: relative; background: var(--hull); border: 2px solid var(--seam); border-radius: 14px; padding: 18px 8px; font-family: var(--display); font-size: 40px; line-height: 1; }
+.ans kbd { position: absolute; top: 6px; inset-inline-start: 8px; font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.ans:hover { border-color: var(--forge); }
+.ans.right { background: #123a26; border-color: var(--ok); }
+.ans.wrong { background: #3d1220; border-color: var(--danger); }
+.fly { position: absolute; font-family: var(--mono); color: var(--forge); font-size: 22px; pointer-events: none; animation: fly .9s ease-out forwards; }
+@keyframes fly { to { transform: translateY(-80px); opacity: 0; } }
+.speak { background: none; border: 1px solid var(--seam); border-radius: 999px; padding: 4px 12px; color: var(--dim); font-size: 13px; }
+
+/* quiz results */
+.reslist { display: grid; gap: 6px; }
+.resrow { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; background: var(--hull); border: 1px solid var(--seam); border-radius: 10px; padding: 8px 12px; }
+.resrow .ex { direction: ltr; unicode-bidi: isolate; text-align: right; font-family: var(--mono); }
+.mark { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+.mark.y { background: var(--ok); color: #05210f; } .mark.n { background: var(--danger); color: #2a0510; } .mark.x { background: var(--seam); color: var(--dim); }
+.sum { display: grid; gap: 6px; }
+.sum div { display: flex; justify-content: space-between; gap: 12px; }
+.sum .tot { border-top: 1px solid var(--seam); padding-top: 6px; font-weight: 700; }
+.two { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; align-items: start; }
+
+/* hangar */
+.htabs { display: flex; gap: 6px; }
+.htabs button { background: none; border: 1px solid var(--seam); border-radius: 999px; padding: 5px 14px; color: var(--dim); }
+.htabs button[aria-pressed="true"] { border-color: var(--forge); color: var(--fg); }
+.ups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.up { background: var(--hull); border: 1px solid var(--seam); border-radius: 12px; padding: 12px 14px; display: grid; gap: 6px; text-align: start; min-width: 0; }
+.up:hover:not(:disabled) { border-color: var(--forge); }
+.up .nm { font-weight: 700; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.pips { display: flex; gap: 4px; }
+.pips i { width: 18px; height: 6px; border-radius: 3px; background: var(--seam); }
+.pips i.on { background: var(--forge); }
+.up p { margin: 0; font-size: 12px; color: var(--dim); }
+.up .price { font-size: 13px; }
+.up .need { font-size: 12px; color: var(--danger); }
+.up.max .price { color: var(--ok); font-family: var(--body); }
+.confirm { border: 1px solid var(--forge); background: var(--hull-2); border-radius: 12px; padding: 12px 14px; font-size: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
+
+/* game */
+.game { padding: 0; gap: 0; }
+#play { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hud { position: absolute; inset-inline: 0; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; font-size: 13px; gap: 12px; flex-wrap: wrap; background: linear-gradient(rgba(9,11,23,.75), transparent); }
+.hud .grp { display: flex; gap: 18px; align-items: center; }
+.hud .lbl { color: var(--dim); margin-inline-end: 6px; }
+.shield { width: 100px; height: 6px; background: var(--seam); border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; }
+.shield i { display: block; height: 100%; width: 80%; background: var(--m-l); }
+.lives { color: var(--danger); letter-spacing: 3px; }
+.place { position: absolute; top: 52px; inset-inline-end: 18px; background: rgba(9,11,23,.7); border: 1px solid var(--seam); border-radius: 10px; padding: 6px 12px; font-size: 13px; display: grid; gap: 3px; justify-items: end; }
+.place b { font-size: 15px; }
+.place .dots { display: flex; gap: 4px; direction: rtl; }
+.place .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--seam); }
+.place .dots i.on { background: var(--trail-o); }
+.place small { color: var(--dim); font-family: var(--mono); font-size: 11px; }
+.arrive { position: absolute; top: 90px; inset-inline: 0; margin-inline: auto; width: max-content; font-family: var(--display); font-size: 44px; text-shadow: 0 2px 12px #000; pointer-events: none; animation: arrive 2.4s ease forwards; }
+@keyframes arrive { 0% { opacity: 0; transform: translateY(8px) } 15%, 70% { opacity: 1; transform: none } 100% { opacity: 0 } }
+.forge { position: absolute; bottom: 12px; inset-inline: 0; margin-inline: auto; width: max-content; max-width: calc(100% - 24px); display: flex; align-items: center; gap: 14px; background: rgba(18,22,44,.9); border: 1px solid var(--seam); border-radius: 14px; padding: 8px 14px; }
+.slot { width: 46px; height: 46px; border-radius: 10px; border: 1.5px dashed var(--seam); display: grid; place-items: center; font-family: var(--mono); font-size: 18px; }
+.slot.full { border-style: solid; }
+.slot small { font-size: 9px; color: var(--dim); font-family: var(--body); text-align: center; line-height: 1.1; }
+.forge .meter { display: grid; gap: 4px; min-width: 150px; }
+.forge .meter .bar { height: 8px; border-radius: 4px; background: var(--seam); overflow: hidden; }
+.forge .meter .bar i { display: block; height: 100%; background: var(--forge); transition: width .3s; }
+.forge .wname { font-family: var(--display); font-size: 24px; line-height: 1; }
+.forge .hint { font-size: 11px; color: var(--dim); }
+.ready .hint { color: var(--forge); }
+.sim { position: absolute; inset-inline-start: 12px; bottom: 12px; display: grid; gap: 6px; }
+.sim button { background: rgba(18,22,44,.9); border: 1px solid var(--seam); border-radius: 8px; font-size: 12px; padding: 5px 10px; color: var(--dim); text-align: start; }
+.sim span { font-size: 10px; color: var(--dim); letter-spacing: 1px; }
+
+/* overlays */
+.overlay { background: rgba(9,11,23,.84); justify-content: center; align-items: center; text-align: center; }
+.overlay .card { background: var(--hull); border: 1px solid var(--seam); border-radius: 16px; padding: 22px 26px; display: grid; gap: 12px; width: min(460px, 100%); }
+.stars-big { font-size: 34px; color: var(--forge); letter-spacing: 6px; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stats div { display: grid; gap: 2px; }
+.stats b { font-size: 20px; }
+.stats span { font-size: 12px; color: var(--dim); }
+.minitrail { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; color: var(--dim); }
+.minitrail i { width: 34px; height: 3px; background: var(--trail-o); border-radius: 2px; }
+.minitrail b { color: var(--fg); }
+
+/* codex / parents */
+.codex { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.cx { background: var(--hull); border: 1px solid var(--seam); border-radius: 12px; padding: 12px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.cx .ic { height: 40px; border-radius: 8px; display: grid; place-items: center; font-family: var(--mono); font-size: 14px; }
+.cx .nm { font-family: var(--display); font-size: 22px; line-height: 1; }
+.cx p { margin: 0; font-size: 12px; color: var(--dim); }
+.cx.unknown .ic { background: var(--hull-2); color: var(--dim); }
+.cx.unknown .nm { color: var(--dim); }
+.empty { border: 1px dashed var(--seam); border-radius: 12px; padding: 18px; color: var(--dim); text-align: center; display: grid; gap: 10px; justify-items: center; }
+.kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.kpis .panel b { font-size: 28px; display: block; }
+.topic { display: grid; grid-template-columns: 90px 1fr 44px; gap: 10px; align-items: center; font-size: 13px; }
+.topic .b { height: 8px; background: var(--seam); border-radius: 4px; overflow: hidden; }
+.topic .b i { display: block; height: 100%; }
+.misses { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13px; }
+.misses li { display: flex; justify-content: space-between; gap: 10px; }
+.misses .ex { direction: ltr; unicode-bidi: isolate; font-family: var(--mono); }
+.gate { display: grid; gap: 10px; justify-items: center; text-align: center; margin: auto; }
+.gate input { background: var(--void); border: 1px solid var(--seam); color: var(--fg); border-radius: 8px; padding: 8px 10px; font: inherit; width: 120px; text-align: center; font-family: var(--mono); }
+
+.set { display: grid; gap: 10px; max-width: 520px; }
+.set label { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--hull); border: 1px solid var(--seam); border-radius: 10px; padding: 10px 14px; }
+.set input[type=range] { accent-color: var(--forge); width: 160px; }
+.set input[type=checkbox] { accent-color: var(--forge); width: 18px; height: 18px; }
+.err { justify-content: center; align-items: center; text-align: center; }
+.err .code { font-family: var(--mono); color: var(--danger); font-size: 13px; }
+
+@media (max-width: 760px) {
+  .screen { aspect-ratio: auto; min-height: 720px; }
+  .view { padding: 18px; }
+  .home { padding-inline: 18px; }
+  .home-menu { min-width: 0; width: 100%; }
+  .home-side { position: static; justify-items: start; text-align: start; }
+  .mapwrap, .two { grid-template-columns: 1fr; }
+  .mapsvg { max-height: 300px; }
+  .stops, .answers, .ups, .kpis { grid-template-columns: 1fr 1fr; }
+  .codex { grid-template-columns: 1fr 1fr; }
+  .forge .meter { min-width: 90px; }
+  .sim { top: 120px; bottom: auto; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important; } }
+</style>
+
+</head>
+<body>
+<div class="wrap" dir="rtl" lang="he">
+  <div class="bench">
+    <h1>כור הכוכבים <small>מוקאפ לחיץ · גרסה 2 · שביל ישראל · נתונים מדומים</small></h1>
+    <label class="toggle" for="fresh"><input type="checkbox" id="fresh"> הצג כשחקן חדש (מצבים ריקים)</label>
+  </div>
+  <nav class="tabs" id="tabs" aria-label="מסכי המוקאפ"></nav>
+
+  <div class="screen" id="screen">
+    <canvas id="stars" aria-hidden="true"></canvas>
+
+    <section class="view home" data-v="home" data-name="S1 פתיחה">
+      <div class="banner" id="storage-warn" hidden>ההתקדמות לא תישמר במחשב הזה</div>
+      <h2 class="logo">כור<span>הכוכבים</span></h2>
+      <div class="home-menu">
+        <button class="btn primary big" data-go="map"><span class="js-cont">המשך בשביל</span><em class="js-cont-sub">שלב 3 · הכרמל</em></button>
+        <button class="btn" data-go="codex">קודקס שילובים <em class="js-codex">4/10</em></button>
+        <button class="btn" data-go="parents">להורים</button>
+        <button class="btn" data-go="settings">הגדרות</button>
+        <button class="btn locked" id="surv-btn">הישרדות <em>🔒 ייפתח כשתגיע לאילת</em></button>
+      </div>
+      <div class="home-side"><span>המטבעות שלך</span><span class="coin js-coins">140</span></div>
+    </section>
+
+    <section class="view" data-v="map" data-name="S2 מפת השביל" hidden>
+      <div class="topbar"><h2 class="v-title">שביל ישראל</h2><div class="row"><span class="coin js-coins">140</span><button class="back" data-go="home">חזרה</button></div></div>
+      <div class="mapwrap">
+        <svg class="mapsvg" id="mapsvg" viewBox="0 0 160 470" role="img" aria-label="מפת ארץ ישראל עם שביל ישראל מקיבוץ דן עד אילת"></svg>
+        <div class="stages" id="stages"></div>
+      </div>
+      <div class="toast" id="map-toast" hidden></div>
+    </section>
+
+    <section class="view" data-v="card" data-name="S3 כרטיס שלב" hidden>
+      <div class="topbar"><span class="num" style="color:var(--dim)" id="card-n">שלב 3 מתוך 10</span><button class="back" data-go="map">חזרה למפה</button></div>
+      <h2 class="v-title" id="card-t">הכרמל</h2>
+      <p class="v-sub" id="card-sub">מציפורי ועד עין הוד. הרקע יתחלף כל 20 שניות לתחנה הבאה בדרך. בסוף השלב מחכה בוס.</p>
+      <div class="stops" id="stops"></div>
+      <div class="row"><button class="btn primary big" data-go="quiz">לחידון! 5 שאלות בדקה</button><span class="notes">כל תשובה נכונה = <span class="coin">10</span> ותשובה מהירה עוד <span class="coin">5</span></span></div>
+    </section>
+
+    <section class="view quiz" data-v="quiz" data-name="S4 חידון" hidden>
+      <div class="qbar"><span class="tsec" id="tsec">60</span><div class="timer" id="timer"><i id="tbar"></i></div><span class="coin" id="qcoins">+0</span></div>
+      <div class="qmeta"><span id="qn">שאלה 1 מתוך 5</span><button class="speak" id="speak">🔈 הקרא לי</button></div>
+      <div class="qtext" id="qtext">38 + 25 = ?</div>
+      <p class="qhint">בחר תשובה בעכבר או במקשים 1 עד 4</p>
+      <div class="answers" id="answers"></div>
+      <div class="toast" id="quiz-toast" hidden></div>
+    </section>
+
+    <section class="view" data-v="qres" data-name="S5 תוצאות חידון" hidden>
+      <div class="topbar"><h2 class="v-title" id="qres-t">4 מתוך 5!</h2></div>
+      <div class="two">
+        <div class="reslist" id="reslist"></div>
+        <div class="panel"><h3>מטבעות</h3><div class="sum" id="sum"></div><div style="margin-top:14px"><button class="btn primary" data-go="hangar" style="width:100%">למוסך</button></div></div>
+      </div>
+    </section>
+
+    <section class="view" data-v="hangar" data-name="S6 מוסך" hidden>
+      <div class="topbar"><h2 class="v-title">מוסך שדרוגים</h2><div class="row"><span class="coin js-coins" style="font-size:22px">195</span><button class="btn primary" data-go="game">צא לדרך!</button></div></div>
+      <div class="htabs"><button aria-pressed="true" data-ht="ship">חללית</button><button aria-pressed="false" data-ht="weap">נשקים</button></div>
+      <div class="confirm" id="buy-confirm" hidden><span id="buy-q"></span><span class="row"><button class="btn primary" id="buy-yes">קנה</button><button class="btn" id="buy-no">לא עכשיו</button></span></div>
+      <div class="ups" id="ups"></div>
+    </section>
+
+    <section class="view game" data-v="game" data-name="S7 משחק" hidden>
+      <canvas id="play" aria-label="שדה המשחק מעל נוף התחנה הנוכחית בשביל"></canvas>
+      <div class="hud">
+        <div class="grp"><span><span class="lbl">ניקוד</span><b class="num" id="score">4,820</b></span><span><span class="lbl">גל</span><b class="num">3/5</b></span></div>
+        <div class="grp"><span><span class="lbl">מגן</span><span class="shield"><i></i></span></span><span class="lives" aria-label="3 חיים">♥♥♥</span><button class="back" data-go="pause">Esc השהיה</button></div>
+      </div>
+      <div class="place"><b id="pl-name">ציפורי</b><span class="dots" id="pl-dots"></span><small id="pl-next">הנוף מתחלף בעוד 20 ש'</small></div>
+      <div id="arrive-host"></div>
+      <div class="forge" id="forge">
+        <div class="slot full" id="slot1" style="border-color:var(--m-l);color:var(--m-l)">L</div>
+        <div class="slot" id="slot2"><small>אסוף<br>מודול</small></div>
+        <div class="meter"><span class="wname" id="wname">קרן</span><div class="bar"><i id="energy" style="width:40%"></i></div><span class="hint" id="hint">אסוף מודול שני כדי להתיך</span></div>
+      </div>
+      <div class="sim"><span>סימולציה</span>
+        <button id="sim-bg">דלג לתחנה הבאה</button>
+        <button id="sim-pick">איסוף מודול מניפה</button>
+        <button id="sim-fuse">התכה (E)</button>
+        <button data-go="win">ניצחון בשלב</button>
+        <button data-go="lose">הפסד</button>
+      </div>
+      <div class="toast" id="toast" hidden></div>
+    </section>
+
+    <section class="view overlay" data-v="pause" data-name="S8 השהיה" hidden>
+      <div class="card">
+        <h2 class="v-title">השהיה</h2>
+        <button class="btn primary" data-go="game">המשך</button>
+        <button class="btn" data-go="settings">הגדרות</button>
+        <button class="btn" id="quit">יציאה למפה</button>
+        <div class="confirm" id="quit-confirm" hidden><span>השלב לא יישמר, אבל המטבעות והשדרוגים כן.</span><span class="row"><button class="btn" data-go="map">צא למפה</button><button class="btn" id="quit-cancel">הישאר</button></span></div>
+      </div>
+    </section>
+
+    <section class="view overlay" data-v="win" data-name="S9 ניצחון" hidden>
+      <div class="card">
+        <h2 class="v-title">עברת את הכרמל!</h2>
+        <div class="stars-big" aria-label="3 כוכבים">★★★</div>
+        <div class="minitrail"><span>הכרמל</span><i></i><span>✈</span><i></i><b>מישור החוף</b></div>
+        <div class="stats"><div><b class="num">7,460</b><span>ניקוד</span></div><div><b class="num">81%</b><span>דיוק</span></div><div><b>מניפת קרניים</b><span>שילוב חדש</span></div></div>
+        <div class="row" style="justify-content:center"><button class="btn primary" id="next-stage">לשלב הבא: מישור החוף</button><button class="btn" data-go="map">למפה</button></div>
+      </div>
+    </section>
+
+    <section class="view overlay" data-v="lose" data-name="S9ב הפסד" hidden>
+      <div class="card">
+        <h2 class="v-title">החללית נפגעה</h2>
+        <div class="stats"><div><b class="num">3,150</b><span>ניקוד</span></div><div><b class="num">4/5</b><span>גל</span></div><div><b>הר הכרמל</b><span>תחנה</span></div></div>
+        <p class="notes">אפשר לנסות שוב בלי חידון נוסף. נשארו לך <span class="coin js-coins">55</span> לשדרוגים.</p>
+        <div class="row" style="justify-content:center"><button class="btn primary" data-go="hangar">נסה שוב</button><button class="btn" data-go="map">למפה</button></div>
+      </div>
+    </section>
+
+    <section class="view" data-v="codex" data-name="S10 קודקס" hidden>
+      <div class="topbar"><h2 class="v-title">קודקס שילובים <span class="num js-codex" style="font-size:22px;color:var(--dim)">4/10</span></h2><button class="back" data-go="home">חזרה</button></div>
+      <div class="empty" id="codex-empty" hidden>עוד לא גילית שילובים. אסוף שני מודולים במשחק ולחץ E.</div>
+      <div class="codex" id="codex"></div>
+    </section>
+
+    <section class="view" data-v="parents" data-name="S11 הורים" hidden>
+      <div class="topbar"><h2 class="v-title">להורים</h2><button class="back" data-go="home">חזרה</button></div>
+      <div class="gate" id="gate">
+        <p class="v-sub">כדי להיכנס, פתרו: <b class="num">7 × 8</b></p>
+        <input id="gate-in" inputmode="numeric" aria-label="תשובה" placeholder="?">
+        <button class="btn primary" id="gate-go">כניסה</button>
+        <small class="notes" id="gate-msg">(במוקאפ: 56)</small>
+      </div>
+      <div id="pdata" hidden style="display:grid;gap:14px">
+        <div class="empty" id="p-empty" hidden>עוד לא נפתרו חידונים. הנתונים יופיעו אחרי השלב הראשון.</div>
+        <div id="p-full" style="display:grid;gap:14px">
+          <div class="kpis">
+            <div class="panel"><h3>חידונים</h3><b class="num">14</b></div>
+            <div class="panel"><h3>תשובות נכונות</h3><b class="num">76%</b></div>
+            <div class="panel"><h3>מיקום בשביל</h3><b>שלב 3 · הכרמל</b></div>
+          </div>
+          <div class="two">
+            <div class="panel"><h3>נכונות לפי נושא</h3><div style="display:grid;gap:8px" id="topics"></div></div>
+            <div class="panel"><h3>הכי קשים לאחרונה</h3><ul class="misses">
+              <li><span class="ex">46 + 37</span><span>טעה 3 פעמים</span></li>
+              <li><span class="ex">71 − 28</span><span>טעה 2 פעמים</span></li>
+              <li><span class="ex">5 × 7</span><span>טעה 2 פעמים</span></li>
+              <li><span>לדנה 34 מדבקות, נתנה 9...</span><span>טעה פעם 1</span></li>
+            </ul></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" data-v="settings" data-name="S12 הגדרות" hidden>
+      <div class="topbar"><h2 class="v-title">הגדרות</h2><button class="back" id="settings-back">חזרה</button></div>
+      <div class="set">
+        <label for="sfx">עוצמת אפקטים <input type="range" id="sfx" value="80"></label>
+        <label for="music">עוצמת מוזיקה <input type="range" id="music" value="55"></label>
+        <label for="tts">הקראת שאלות בקול <input type="checkbox" id="tts" checked></label>
+        <label for="flash">הפחתת הבהובים <input type="checkbox" id="flash"></label>
+        <button class="btn" id="reset" style="border-color:var(--danger);color:var(--danger)">איפוס התקדמות</button>
+        <div class="confirm" id="reset-confirm" hidden style="border-color:var(--danger)"><span>למחוק את כל ההתקדמות, המטבעות והשדרוגים?</span><span class="row"><button class="btn" id="reset-yes">מחק הכל</button><button class="btn" id="reset-no">ביטול</button></span></div>
+      </div>
+    </section>
+
+    <section class="view err" data-v="error" data-name="E1 שגיאה" hidden>
+      <h2 class="v-title">המשחק לא נטען</h2>
+      <p class="v-sub">חלק מהתמונות לא הגיעו תוך 10 שניות. בדוק את החיבור לאינטרנט ונסה שוב.</p>
+      <span class="code">שגיאה: ASSET_TIMEOUT · bg/carmel-3.jpg</span>
+      <button class="btn primary" data-go="home">נסה שוב</button>
+      <p class="notes">תמונת רקע בודדת שלא נטענת באמצע שלב לא עוצרת את המשחק. במקומה מצויר נוף בצבעי האזור.</p>
+    </section>
+  </div>
+
+  <p class="notes"><b>איך לבדוק:</b> התחילו מ"המשך בשביל" ועברו את כל הלולאה: מפה, כרטיס שלב, חידון של דקה, תוצאות, מוסך ומשחק. בחידון אפשר לענות במקשים 1 עד 4. במשחק זזים בחצים, יורים ברווח ומתיכים ב-E, והנוף מתחלף כל 20 שניות (או בכפתור "דלג"). הנופים כאן מצוירים כממלא מקום, ובמשחק האמיתי יהיו תמונות של התחנות. הסימון "שחקן חדש" מציג את המצבים הריקים.</p>
+</div>
+
+<script>
+/* ---------- data ---------- */
+const PAL = {
+  north:  {sky:['#7fb6e0','#d8ecf5'], land:['#4f7d3a','#3b6a2e','#2c5223'], sea:0, shape:'hills'},
+  galil:  {sky:['#8bc0e6','#e7f1f2'], land:['#7a9a4a','#5c8a3a','#3e6b2c'], sea:0, shape:'hills', lake:1},
+  carmel: {sky:['#86b9e2','#eaf2ef'], land:['#5e8d47','#3f7334','#2a5a29'], sea:0, shape:'ridge'},
+  coast:  {sky:['#7fc0ea','#f4efe2'], land:['#e9d7a8','#cdb682','#8aa25a'], sea:1, shape:'flat'},
+  center: {sky:['#9ac6e8','#efefe6'], land:['#9db36a','#7d9a4f','#58773a'], sea:0, shape:'flat'},
+  judea:  {sky:['#93bfe4','#efe9dc'], land:['#b5a77a','#8e8a5a','#5f6a3c'], sea:0, shape:'terrace'},
+  shfela: {sky:['#9cc4e3','#f1e8d4'], land:['#c7b07a','#a4945c','#7b7d45'], sea:0, shape:'hills'},
+  negevN: {sky:['#a9cbe4','#f6e4c4'], land:['#d9b27a','#bf8f55','#93683a'], sea:0, shape:'crater'},
+  negevH: {sky:['#b2cde2','#f7dcb6'], land:['#cf9a63','#a8703f','#7d4c2a'], sea:0, shape:'crater'},
+  arava:  {sky:['#9fcbe8','#f4d1a8'], land:['#c7684a','#9e4a35','#6e3326'], sea:1, shape:'peaks'},
+};
+const STAGES = [
+  ['הגליל העליון', 'north',  ['קיבוץ דן','תל חי','נחל דישון','הר מירון'], 0],
+  ['הגליל התחתון והכנרת', 'galil', ['נחל עמוד','הר ארבל','קרני חיטין','הר תבור'], 0],
+  ['הכרמל', 'carmel', ['ציפורי','טבעון','הר הכרמל','עין הוד'], 1],
+  ['מישור החוף', 'coast', ['זכרון יעקב','נחל תנינים','נחל אלכסנדר','חוף פולג'], 0],
+  ['מרכז הארץ', 'center', ['פארק הירקון','תל אפק','יער בן שמן','מודיעין'], 0],
+  ['הרי יהודה', 'judea', ['נחל שורק','הר איתן','שער הגיא','עין חמד'], 1],
+  ['השפלה', 'shfela', ['בית גוברין','מערות הפעמון','תל לכיש','יער להב'], 0],
+  ['צפון הנגב', 'negevN', ['ערד','מכתש קטן','מכתש גדול','ירוחם'], 0],
+  ['הר הנגב', 'negevH', ['שדה בוקר','עין עבדת','מצפה רמון','מכתש רמון'], 0],
+  ['ערבה והרי אילת', 'arava', ['נקרות','שיזפון','הר שלמה','חוף אילת'], 1],
+];
+const STARS_DONE = [3, 2];
+const NODE = [[135,36],[124,70],[90,76],[72,112],[76,160],[90,186],[70,208],[98,262],[66,318],[82,412]];
+const MOD = { L:{n:'קרן',c:'#4fd8ff'}, S:{n:'מניפה',c:'#ff8a3d'}, H:{n:'מתביית',c:'#6bff9e'}, A:{n:'קשת',c:'#b98cff'} };
+const COMBOS = [
+  ['LS','מניפת קרניים','5 קרניים חודרות בפיזור רחב',1],['LH','רומח ציד','קרן שמתכופפת לאויב הקרוב',0],
+  ['LA','חוט ברק','קרן שמשרשרת ברק ל-3 אויבים',1],['SH','נחיל דבורים','6 מיני-טילים מתבייתים',0],
+  ['SA','רשת סערה','פיזור שמשאיר שדה חשמלי',0],['HA','פולס EMP','פיצוץ שמשתק אויבים ברדיוס',1],
+  ['LL','קרן II','קרן מוגברת',1],['SS','מניפה II','מניפה מוגברת',0],['HH','מתביית II','שני טילים בכל ירייה',0],['AA','קשת II','קפיצה ל-5 אויבים',0],
+];
+const UPS = {
+  ship: [['מגן','מגן חזק שמתמלא מהר',1,3,[40,80,120]],['מנוע','חללית מהירה יותר',1,3,[40,80,120]],['חיים נוספים','עוד לב בתחילת שלב',0,2,[100,150]],['זינוק','פחות המתנה בין זינוקים',0,2,[60,100]]],
+  weap: [['קרן','נזק גבוה יותר לקרן ולשילובים שלה',1,3,[30,60,90]],['מניפה','נזק גבוה יותר למניפה',0,3,[30,60,90]],['מתביית','נזק גבוה יותר לטילים',0,3,[30,60,90]],['קשת','נזק גבוה יותר לברק',0,3,[30,60,90]],['כור','הכור מתמלא מהר יותר',0,3,[50,90,130]]],
+};
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+let fresh = false, cur = 'home', prev = 'home', coins = 140, stageIdx = 2, curStage = 2, htab = 'ship';
+
+/* ---------- scenery painter (placeholder for real photos) ---------- */
+function paintScene(ctx, w, h, key, seed, t) {
+  const p = PAL[key]; let r = seed * 9301 + 49297; const rnd = () => ((r = (r * 9301 + 49297) % 233280) / 233280);
+  const g = ctx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, p.sky[0]); g.addColorStop(1, p.sky[1]);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = 'rgba(255,240,200,.85)'; ctx.beginPath(); ctx.arc(w * (.2 + rnd() * .6), h * .2, h * .06, 0, 7); ctx.fill();
+  const base = [.55, .68, .8];
+  p.land.forEach((c, i) => {
+    ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(0, h);
+    const y0 = h * base[i], amp = h * (p.shape === 'flat' ? .03 : p.shape === 'peaks' ? .22 : .1) * (1 - i * .25);
+    const ph = rnd() * 6, fr = 1.5 + rnd() * 2;
+    for (let x = 0; x <= w; x += w / 60) {
+      let y = y0 - Math.sin(x / w * fr * Math.PI + ph) * amp;
+      if (p.shape === 'peaks') y = y0 - Math.abs(Math.sin(x / w * fr * 2 + ph)) * amp;
+      if (p.shape === 'terrace') y = Math.round(y / (h * .03)) * (h * .03);
+      if (p.shape === 'crater' && i === 1) y = y0 + (Math.abs(x / w - .5) < .28 ? h * .07 : -h * .02);
+      if (p.shape === 'ridge' && i === 0) y = y0 - (1 - x / w) * h * .14;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(w, h); ctx.fill();
+    if (i === 0 && p.sea) { ctx.fillStyle = '#2f7fb8'; ctx.fillRect(0, h * .9, w, h * .1); }
+  });
+  if (p.lake) { ctx.fillStyle = '#3d86c2'; ctx.beginPath(); ctx.ellipse(w * .7, h * .86, w * .18, h * .035, 0, 0, 7); ctx.fill(); }
+  ctx.fillStyle = 'rgba(30,50,25,.55)';
+  for (let i = 0; i < 18; i++) { const x = rnd() * w, y = h * (.78 + rnd() * .2); ctx.beginPath(); ctx.arc(x, y, h * .012 + rnd() * h * .01, 0, 7); ctx.fill(); }
+}
+
+/* ---------- router ---------- */
+const views = $$('.view'), tabs = $('#tabs');
+views.forEach(v => { const b = document.createElement('button'); b.textContent = v.dataset.name; b.dataset.go = v.dataset.v; tabs.append(b); });
+function go(id) {
+  if (id === 'settings') prev = cur === 'pause' ? 'pause' : 'home';
+  if (id === 'quiz' && cur !== 'quiz') startQuiz();
+  if (id !== 'quiz') stopQuiz();
+  if (id === 'qres') renderRes();
+  cur = id;
+  views.forEach(v => v.hidden = v.dataset.v !== id);
+  tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-current', b.dataset.go === id));
+  $$('.confirm').forEach(c => c.hidden = true);
+  if (id === 'card') renderCard();
+  if (id === 'hangar') renderUps();
+  if (id === 'game') { gameBoot(); bgShownAt = performance.now() - bgElapsed; }
+  if (id === 'parents') { $('#gate').hidden = false; $('#pdata').hidden = true; $('#gate-in').value = ''; }
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-go]'); if (!b) return;
+  if (b.closest('.stages') && b.dataset.idx) { curStage = +b.dataset.idx; }
+  go(b.dataset.go);
+});
+function toastIn(sel, m) { const t = $(sel); t.textContent = m; t.hidden = false; clearTimeout(t._h); t._h = setTimeout(() => t.hidden = true, 2400); }
+function setCoins(v) { coins = v; $$('.js-coins').forEach(e => e.textContent = coins); }
+$('#surv-btn').onclick = () => { let t = $('.home .toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; $('.home').append(t); } t.textContent = 'מצב הישרדות ייפתח כשתגיע לאילת'; t.hidden = false; setTimeout(() => t.hidden = true, 2200); };
+$('#settings-back').onclick = () => go(prev);
+$('#quit').onclick = () => $('#quit-confirm').hidden = false;
+$('#quit-cancel').onclick = () => $('#quit-confirm').hidden = true;
+$('#reset').onclick = () => $('#reset-confirm').hidden = false;
+$('#reset-no').onclick = () => $('#reset-confirm').hidden = true;
+$('#reset-yes').onclick = () => { $('#fresh').checked = true; applyFresh(true); go('home'); };
+$('#next-stage').onclick = () => { curStage = Math.min(9, curStage + 1); go('card'); };
+
+/* ---------- map ---------- */
+const OUTLINE = '90,31 137,8 147,12 143,42 142,56 138,77 135,188 138,244 125,274 95,363 78,452 70,459 7,253 30,211 35,200 44,184 56,151 65,121 69,101 76,63 85,63 87,51';
+function renderMap() {
+  const done = stageIdx, pts = [[145,14], ...NODE, [78,448]];
+  const path = pts.map(p => p.join(',')).join(' ');
+  const donePts = pts.slice(0, done + 2).map(p => p.join(',')).join(' ');
+  let s = `<rect width="160" height="470" fill="var(--sea)" opacity=".55" rx="6"/>
+    <polygon points="${OUTLINE}" fill="var(--land)" stroke="#5a7a58" stroke-width=".8"/>
+    <ellipse cx="137" cy="66" rx="3.5" ry="8" fill="var(--sea)"/><ellipse cx="132" cy="222" rx="3.5" ry="24" fill="var(--sea)"/>
+    <text x="22" y="120" fill="#8db4e8" font-size="7" opacity=".8">הים התיכון</text>
+    <text x="70" y="468" fill="#8db4e8" font-size="6" opacity=".8">ים סוף</text>
+    <polyline points="${path}" fill="none" stroke="#9aa1c4" stroke-width="1.6" stroke-dasharray="3 2.5" opacity=".7"/>
+    <polyline points="${donePts}" fill="none" stroke="var(--trail-o)" stroke-width="2.4" stroke-linejoin="round"/>
+    <circle cx="145" cy="14" r="2.5" fill="var(--trail-o)"/><text x="138" y="9" fill="var(--fg)" font-size="6">דן</text>
+    <circle cx="78" cy="448" r="2.5" fill="#9aa1c4"/><text x="88" y="452" fill="var(--fg)" font-size="6">אילת</text>`;
+  NODE.forEach(([x, y], i) => {
+    const st = i < done ? 'done' : i === done ? 'cur' : 'lock';
+    s += `<g><circle cx="${x}" cy="${y}" r="6" fill="${st === 'done' ? 'var(--trail-o)' : st === 'cur' ? 'var(--void)' : '#3a4166'}" stroke="${st === 'cur' ? 'var(--forge)' : 'none'}" stroke-width="1.5"/>
+      <text x="${x}" y="${y + 2.2}" text-anchor="middle" font-size="6" font-family="IBM Plex Mono, monospace" fill="${st === 'done' ? '#2a1700' : st === 'cur' ? 'var(--forge)' : '#8d95c7'}">${i + 1}</text></g>`;
+  });
+  const [cx, cy] = NODE[done];
+  s += `<g transform="translate(${cx + 12},${cy - 4})"><path d="M0,-6 L4,5 L0,3 L-4,5Z" fill="var(--fg)"/></g>`;
+  $('#mapsvg').innerHTML = s;
+  $('#stages').innerHTML = STAGES.map(([t, , stops, boss], i) => {
+    const st = i < done ? 'done' : i === done ? 'cur' : 'lock';
+    const right = st === 'done' ? '★'.repeat(STARS_DONE[i] || 3) + '☆'.repeat(3 - (STARS_DONE[i] || 3)) : st === 'cur' ? 'אתה כאן' : '🔒';
+    return `<button class="st ${st}" ${st === 'lock' ? `data-lock="${i}"` : `data-go="card" data-idx="${i}"`}><span class="n">${i + 1}</span><span class="t">${t}${boss ? ' · בוס' : ''}<small>${stops[0]} ← ${stops[3]}</small></span><span class="s">${right}</span></button>`;
+  }).join('');
+}
+$('#stages').addEventListener('click', e => {
+  const b = e.target.closest('[data-lock]'); if (!b) return;
+  b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+  toastIn('#map-toast', `קודם צריך לעבור את ${STAGES[stageIdx][0]}`);
+});
+
+/* ---------- stage card ---------- */
+function renderCard() {
+  const [t, key, stops, boss] = STAGES[curStage];
+  $('#card-n').textContent = `שלב ${curStage + 1} מתוך 10`; $('#card-t').textContent = t;
+  $('#card-sub').textContent = `מ${stops[0]} ועד ${stops[3]}. הנוף יתחלף כל 20 שניות לתחנה הבאה בדרך.${boss ? ' בסוף השלב מחכה בוס.' : ''}`;
+  $('#stops').innerHTML = stops.map((s, i) => `<div class="stop"><canvas width="240" height="150" data-k="${key}" data-s="${curStage * 10 + i}"></canvas><span>${s}</span><small>תחנה ${i + 1} · ${i * 20}–${i * 20 + 20} ש'</small></div>`).join('');
+  $$('#stops canvas').forEach(c => paintScene(c.getContext('2d'), c.width, c.height, c.dataset.k, +c.dataset.s));
+}
+
+/* ---------- quiz ---------- */
+let Q = [], qi = 0, qLeft = 60, qTick = null, qEarn = {right: 0, fast: 0, bonus: 0}, qStart = 0, answers = [], locked = false;
+function rint(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+function makeQ(stage) {
+  const kinds = stage < 3 ? ['add', 'sub', 'cmp'] : stage < 7 ? ['add', 'sub', 'mul', 'cmp'] : ['add', 'sub', 'mul', 'word'];
+  const k = kinds[rint(0, kinds.length - 1)], max = stage < 3 ? 50 : 100;
+  let text, ans, word = false;
+  if (k === 'add') { const a = rint(10, max / 2), b = rint(5, max / 2 - 1); text = `${a} + ${b} = ?`; ans = a + b; }
+  if (k === 'sub') { const a = rint(20, max), b = rint(3, a - 5); text = `${a} − ${b} = ?`; ans = a - b; }
+  if (k === 'mul') { const a = [2, 5, 10][rint(0, 2)], b = rint(2, 9); text = `${b} × ${a} = ?`; ans = a * b; }
+  if (k === 'cmp') { const a = rint(10, max), b = a + rint(-9, 9) || a + 1; text = `${a} ? ${b}`; ans = a > b ? '>' : a < b ? '<' : '='; return {text, ans, opts: ['>', '<', '='], cmp: 1}; }
+  if (k === 'word') { const a = rint(20, 45), b = rint(5, 15); text = `לנועם היו ${a} גולות. הוא נתן לחבר ${b}. כמה נשארו לו?`; ans = a - b; word = true; }
+  const set = new Set([ans]); while (set.size < 4) { const d = ans + rint(-12, 12); if (d >= 0 && d !== ans) set.add(d); }
+  return {text, ans, opts: shuffle([...set]), word};
+}
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = rint(0, i); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function startQuiz() {
+  Q = [{text: '38 + 25 = ?', ans: 63, opts: [53, 63, 61, 73]}, ...Array.from({length: 4}, () => makeQ(curStage))];
+  qi = 0; qLeft = 60; answers = []; qEarn = {right: 0, fast: 0, bonus: 0}; $('#timer').classList.remove('low');
+  showQ(); clearInterval(qTick);
+  qTick = setInterval(() => { if (cur !== 'quiz') return; qLeft--; drawTimer(); if (qLeft <= 0) endQuiz(true); }, 1000); drawTimer();
+}
+function stopQuiz() { clearInterval(qTick); qTick = null; }
+function drawTimer() { $('#tsec').textContent = Math.max(0, qLeft); $('#tbar').style.width = (Math.max(0, qLeft) / 60 * 100) + '%'; $('#timer').classList.toggle('low', qLeft <= 15); }
+function showQ() {
+  const q = Q[qi]; locked = false; qStart = performance.now();
+  $('#qn').textContent = `שאלה ${qi + 1} מתוך 5`;
+  $('#qtext').textContent = q.text; $('#qtext').classList.toggle('word', !!q.word);
+  $('#answers').innerHTML = q.opts.map((o, i) => `<button class="ans" data-a="${i}"><kbd>${i + 1}</kbd>${o}</button>`).join('');
+  $('#qcoins').textContent = '+' + (qEarn.right + qEarn.fast);
+}
+function answer(i) {
+  if (locked || cur !== 'quiz') return; locked = true;
+  const q = Q[qi], pick = q.opts[i], ok = String(pick) === String(q.ans), fast = (performance.now() - qStart) < 8000;
+  const btns = $$('#answers .ans');
+  btns[i].classList.add(ok ? 'right' : 'wrong');
+  if (!ok) btns[q.opts.findIndex(o => String(o) === String(q.ans))].classList.add('right');
+  if (ok) { qEarn.right += 10; if (fast) qEarn.fast += 5; const f = document.createElement('span'); f.className = 'fly'; f.textContent = fast ? '+15' : '+10'; btns[i].append(f); }
+  answers.push({q, pick, ok});
+  $('#qcoins').textContent = '+' + (qEarn.right + qEarn.fast);
+  setTimeout(() => { qi++; if (qi >= 5) endQuiz(false); else showQ(); }, ok ? 650 : 1100);
+}
+function endQuiz(timeout) {
+  stopQuiz();
+  for (let k = answers.length; k < 5; k++) answers.push({q: Q[k], pick: null, ok: false});
+  qEarn.bonus = answers.every(a => a.ok) ? 20 : 0;
+  if (timeout) { toastIn('#quiz-toast', 'נגמר הזמן!'); setTimeout(() => go('qres'), 900); } else go('qres');
+}
+$('#answers').addEventListener('click', e => { const b = e.target.closest('.ans'); if (b) answer(+b.dataset.a); });
+$('#speak').onclick = () => toastIn('#quiz-toast', 'במשחק האמיתי השאלה תוקרא בקול');
+addEventListener('blur', () => { if (cur === 'quiz') { stopQuiz(); toastIn('#quiz-toast', 'הטיימר נעצר. לחץ כדי להמשיך'); const r = () => { if (cur === 'quiz' && !qTick) qTick = setInterval(() => { qLeft--; drawTimer(); if (qLeft <= 0) endQuiz(true); }, 1000); removeEventListener('pointerdown', r); }; addEventListener('pointerdown', r); } });
+let paidFor = null;
+function renderRes() {
+  if (!answers.length) { startQuiz(); stopQuiz(); answers = Q.map((q, i) => ({q, pick: i === 3 ? q.opts.find(o => String(o) !== String(q.ans)) : q.ans, ok: i !== 3})); qEarn = {right: 40, fast: 15, bonus: 0}; }
+  const n = answers.filter(a => a.ok).length;
+  $('#qres-t').textContent = n === 0 ? 'לא נורא! גם בלי מטבעות יוצאים לדרך' : n === 5 ? '5 מתוך 5! מושלם!' : `${n} מתוך 5!`;
+  $('#reslist').innerHTML = answers.map(a => `<div class="resrow"><span class="mark ${a.pick === null ? 'x' : a.ok ? 'y' : 'n'}">${a.pick === null ? '–' : a.ok ? '✓' : '✗'}</span><span class="ex">${a.q.word ? '' : a.q.text.replace('?', a.q.ans)}</span><span>${a.q.word ? a.q.text.slice(0, 26) + '… = ' + a.q.ans : a.pick === null ? 'לא נענתה' : a.ok ? 'נכון' : 'ענית ' + a.pick}</span></div>`).join('');
+  const tot = qEarn.right + qEarn.fast + qEarn.bonus;
+  if (paidFor !== answers) { setCoins(coins + tot); paidFor = answers; }
+  $('#sum').innerHTML = `<div><span>תשובות נכונות</span><span class="coin">${qEarn.right}</span></div><div><span>בונוס מהירות</span><span class="coin">${qEarn.fast}</span></div><div><span>5 מתוך 5</span><span class="coin">${qEarn.bonus}</span></div><div class="tot"><span>הרווחת</span><span class="coin">${tot}</span></div><div><span>יתרה חדשה</span><span class="coin">${coins}</span></div>`;
+}
+
+/* ---------- hangar ---------- */
+let pending = null;
+function renderUps() {
+  $$('.htabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.ht === htab));
+  $('#ups').innerHTML = UPS[htab].map(([n, d, lv, max, prices], i) => {
+    const isMax = lv >= max, price = prices[lv], short = !isMax && price > coins;
+    return `<button class="up ${isMax ? 'max' : ''}" data-u="${i}" ${isMax || short ? 'disabled' : ''}>
+      <span class="nm">${n}<span class="pips">${Array.from({length: max}, (_, k) => `<i class="${k < lv ? 'on' : ''}"></i>`).join('')}</span></span>
+      <p>${d}</p>
+      ${isMax ? '<span class="price">מקסימום</span>' : `<span class="price">רמה ${lv + 1} · <span class="coin">${price}</span></span>`}
+      ${short ? `<span class="need">חסרים ${price - coins} מטבעות</span>` : ''}</button>`;
+  }).join('');
+}
+$('.htabs').addEventListener('click', e => { const b = e.target.closest('[data-ht]'); if (b) { htab = b.dataset.ht; renderUps(); } });
+$('#ups').addEventListener('click', e => {
+  const b = e.target.closest('.up'); if (!b || b.disabled) return;
+  const u = UPS[htab][+b.dataset.u]; pending = u;
+  $('#buy-q').innerHTML = `לקנות ${u[0]} רמה ${u[2] + 1} ב-<span class="coin">${u[4][u[2]]}</span>?`; $('#buy-confirm').hidden = false;
+});
+$('#buy-yes').onclick = () => { if (!pending) return; setCoins(coins - pending[4][pending[2]]); pending[2]++; pending = null; $('#buy-confirm').hidden = true; renderUps(); };
+$('#buy-no').onclick = () => { pending = null; $('#buy-confirm').hidden = true; };
+
+/* ---------- codex / parents ---------- */
+function renderCodex() {
+  $('#codex').innerHTML = COMBOS.map(([k, n, d, f]) => {
+    const a = MOD[k[0]], b = MOD[k[1]];
+    return f && !fresh
+      ? `<div class="cx"><div class="ic" style="background:linear-gradient(90deg,${a.c}33,${b.c}33)">${k[0]} + ${k[1]}</div><span class="nm">${n}</span><p>${d}</p></div>`
+      : `<div class="cx unknown"><div class="ic">???</div><span class="nm">לא התגלה</span><p>רמז: ${a.n} ו${b.n}</p></div>`;
+  }).join('');
+  $('#codex-empty').hidden = !fresh; $$('.js-codex').forEach(e => e.textContent = fresh ? '0/10' : '4/10');
+}
+$('#topics').innerHTML = [['חיבור', 86, 'var(--ok)'], ['חיסור', 74, 'var(--ok)'], ['כפל', 58, 'var(--forge)'], ['השוואה', 92, 'var(--ok)'], ['מילוליות', 61, 'var(--forge)']]
+  .map(([n, v, c]) => `<div class="topic"><span>${n}</span><span class="b"><i style="width:${v}%;background:${c}"></i></span><span class="num">${v}%</span></div>`).join('');
+$('#gate-go').onclick = () => {
+  if ($('#gate-in').value.trim() === '56') { $('#gate').hidden = true; $('#pdata').hidden = false; $('#p-empty').hidden = !fresh; $('#p-full').hidden = fresh; }
+  else { go('home'); }
+};
+$('#gate-in').addEventListener('keydown', e => { if (e.key === 'Enter') $('#gate-go').click(); });
+
+function applyFresh(v) {
+  fresh = v; stageIdx = v ? 0 : 2; curStage = stageIdx; setCoins(v ? 0 : 140);
+  $('.js-cont').textContent = v ? 'צא לשביל!' : 'המשך בשביל';
+  $('.js-cont-sub').textContent = v ? 'מתחילים בקיבוץ דן' : 'שלב 3 · הכרמל';
+  $('#storage-warn').hidden = !v;
+  UPS.ship[0][2] = UPS.ship[1][2] = UPS.weap[0][2] = v ? 0 : 1;
+  renderMap(); renderCodex();
+}
+$('#fresh').addEventListener('change', e => applyFresh(e.target.checked));
+
+/* ---------- reactor ---------- */
+let slots = ['L', null], energy = 40, weapon = 'L';
+function renderForge() {
+  const s2 = $('#slot2');
+  if (slots[1]) { s2.className = 'slot full'; s2.style.borderColor = s2.style.color = MOD[slots[1]].c; s2.textContent = slots[1]; }
+  else { s2.className = 'slot'; s2.style.cssText = ''; s2.innerHTML = '<small>אסוף<br>מודול</small>'; }
+  $('#energy').style.width = energy + '%';
+  const ready = slots[1] && energy >= 100; $('#forge').classList.toggle('ready', !!ready);
+  $('#hint').textContent = !slots[1] ? 'אסוף מודול שני כדי להתיך' : ready ? 'הכור מלא · לחץ E להתכה' : 'הכור מתמלא… השמד אויבים';
+}
+function fuse() {
+  if (!slots[1] || energy < 100) { toastIn('#toast', 'צריך שני מודולים וכור מלא'); return; }
+  const c = COMBOS.find(x => x[0] === slots.join('') || x[0] === slots[1] + slots[0]);
+  weapon = c ? c[0] : slots[0]; $('#wname').textContent = c ? c[1] : MOD[slots[0]].n;
+  toastIn('#toast', 'התכה: ' + (c ? c[1] : '')); slots = [slots[0], null]; energy = 0; renderForge();
+}
+$('#sim-pick').onclick = () => { slots[1] = 'S'; energy = 100; renderForge(); toastIn('#toast', 'נאסף מודול: מניפה (S)'); };
+$('#sim-fuse').onclick = fuse;
+
+/* ---------- background rotation ---------- */
+const BG_MS = 20000;
+let bgIdx = 0, bgShownAt = 0, bgElapsed = 0, bgFrom = null, bgFade = 1;
+const bgCache = {};
+function bgCanvas(i) {
+  const k = curStage + ':' + i + ':' + W + 'x' + H; if (bgCache[k]) return bgCache[k];
+  const c = document.createElement('canvas'); c.width = W; c.height = H; paintScene(c.getContext('2d'), W, H, STAGES[curStage][1], curStage * 10 + i);
+  return bgCache[k] = c;
+}
+function nextBg() {
+  bgFrom = bgIdx; bgIdx = (bgIdx + 1) % 4; bgFade = 0; bgShownAt = performance.now(); bgElapsed = 0; updatePlace(true);
+}
+function updatePlace(announce) {
+  const stops = STAGES[curStage][2];
+  $('#pl-name').textContent = stops[bgIdx];
+  $('#pl-dots').innerHTML = stops.map((_, i) => `<i class="${i <= bgIdx ? 'on' : ''}"></i>`).join('');
+  if (announce) { const a = document.createElement('div'); a.className = 'arrive'; a.textContent = stops[bgIdx]; $('#arrive-host').replaceChildren(a); }
+}
+$('#sim-bg').onclick = nextBg;
+
+/* ---------- canvases ---------- */
+const sc = $('#stars'), sx = sc.getContext('2d'); let starsA = [];
+function sizeStars() { const r = sc.getBoundingClientRect(); sc.width = r.width; sc.height = r.height; starsA = Array.from({length: 140}, () => ({x: Math.random()*sc.width, y: Math.random()*sc.height, z: Math.random()*1.5+.3})); }
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const pc = $('#play'), px = pc.getContext('2d');
+let W = 0, H = 0, ship = {x: 0, y: 0}, shots = [], keys = {}, t0 = 0, booted = false, foes = [], sparks = [], lastShot = 0, score = 4820, bootedStage = -1;
+function gameBoot() { if (booted && bootedStage === curStage) return; sizePlay(); booted = W > 0; bootedStage = curStage; bgIdx = 0; bgElapsed = 0; bgFrom = null; bgFade = 1; updatePlace(false); }
+function sizePlay() {
+  const r = pc.getBoundingClientRect(); if (!r.width) return;
+  W = pc.width = r.width; H = pc.height = r.height; ship = {x: W/2, y: H - 110};
+  foes = Array.from({length: 18}, (_, i) => ({ring: i < 10 ? 0 : 1, a: (i % (i < 10 ? 10 : 8)) / (i < 10 ? 10 : 8) * Math.PI * 2, kind: i === 3 ? 'carrier' : i === 12 || i === 15 ? 'guard' : 'shard', hp: 1}));
+}
+addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (cur === 'quiz' && /^[1-4]$/.test(e.key)) { answer(+e.key - 1); return; }
+  if (cur === 'pause' && e.key === 'Escape') { go('game'); return; }
+  if (cur !== 'game') return;
+  keys[k] = true;
+  if (e.key === 'Escape') go('pause');
+  if (k === 'e') fuse();
+  if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) e.preventDefault();
+});
+addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+addEventListener('blur', () => { if (cur === 'game') go('pause'); });
+
+function frame(t) {
+  const dt = Math.min(32, t - (t0 || t)); t0 = t;
+  sx.clearRect(0, 0, sc.width, sc.height);
+  for (const s of starsA) { if (!reduce) { s.y += s.z * dt * .03; if (s.y > sc.height) { s.y = 0; s.x = Math.random()*sc.width; } } sx.fillStyle = `rgba(200,210,255,${.25 + s.z*.35})`; sx.fillRect(s.x, s.y, s.z, s.z); }
+  if (cur === 'game' && W) drawPlay(t, dt);
+  requestAnimationFrame(frame);
+}
+function drawPlay(t, dt) {
+  bgElapsed = t - bgShownAt;
+  if (bgElapsed >= BG_MS) nextBg();
+  $('#pl-next').textContent = `הנוף מתחלף בעוד ${Math.max(0, Math.ceil((BG_MS - bgElapsed) / 1000))} ש'`;
+  bgFade = Math.min(1, bgFade + dt / 1000);
+  if (bgFrom !== null && bgFade < 1) { px.globalAlpha = 1; px.drawImage(bgCanvas(bgFrom), 0, 0); px.globalAlpha = bgFade; }
+  px.drawImage(bgCanvas(bgIdx), 0, 0); px.globalAlpha = 1;
+  px.fillStyle = 'rgba(9,11,23,.42)'; px.fillRect(0, 0, W, H);
+  const sp = dt * .32;
+  if (keys['arrowleft'] || keys['a']) ship.x -= sp; if (keys['arrowright'] || keys['d']) ship.x += sp;
+  if (keys['arrowup'] || keys['w']) ship.y -= sp; if (keys['arrowdown'] || keys['s']) ship.y += sp;
+  ship.x = Math.max(20, Math.min(W - 20, ship.x)); ship.y = Math.max(H * .6, Math.min(H - 90, ship.y));
+  if (keys[' '] && t - lastShot > 160) {
+    lastShot = t; const c = MOD[weapon[weapon.length - 1]].c;
+    const angs = weapon === 'LS' ? [-.3, -.15, 0, .15, .3] : weapon.includes('S') ? [-.2, 0, .2] : [0];
+    angs.forEach(a => shots.push({x: ship.x, y: ship.y - 18, vx: Math.sin(a) * .5, vy: -.7, c}));
+  }
+  const cx = W/2 + Math.sin(t/2400) * W*.12, cy = H*.3;
+  foes.forEach(f => {
+    if (f.hp <= 0) return;
+    const r = f.ring ? 70 : 130, a = f.a + (reduce ? 0 : t/1000 * (f.ring ? -.6 : .35));
+    f.x = cx + Math.cos(a) * r * 1.4; f.y = cy + Math.sin(a) * r * .55;
+    px.save(); px.translate(f.x, f.y); px.rotate(a);
+    px.fillStyle = f.kind === 'carrier' ? '#ffb547' : f.kind === 'guard' ? '#7fb2ff' : '#ff5c7a';
+    px.beginPath(); px.moveTo(0, -11); px.lineTo(9, 0); px.lineTo(0, 11); px.lineTo(-9, 0); px.closePath(); px.fill();
+    px.strokeStyle = 'rgba(0,0,0,.5)'; px.lineWidth = 1; px.stroke();
+    if (f.kind === 'guard') { px.strokeStyle = 'rgba(127,178,255,.6)'; px.lineWidth = 1.5; px.beginPath(); px.arc(0, 0, 20, 0, Math.PI*2); px.stroke(); }
+    px.restore();
+  });
+  shots = shots.filter(s => s.y > -10);
+  shots.forEach(s => {
+    s.x += s.vx * dt; s.y += s.vy * dt; px.fillStyle = s.c; px.fillRect(s.x - 1.5, s.y - 8, 3, 12);
+    for (const f of foes) if (f.hp > 0 && Math.abs(f.x - s.x) < 12 && Math.abs(f.y - s.y) < 12) {
+      f.hp = 0; s.y = -99; energy = Math.min(100, energy + 12); score += f.kind === 'carrier' ? 250 : 120; $('#score').textContent = score.toLocaleString('en-US');
+      for (let i = 0; i < 10; i++) sparks.push({x: f.x, y: f.y, vx: (Math.random()-.5)*.4, vy: (Math.random()-.5)*.4, l: 400});
+      if (f.kind === 'carrier' && !slots[1]) { slots[1] = 'S'; toastIn('#toast', 'הנושא הפיל מודול: מניפה (S)'); }
+      renderForge();
+      if (foes.every(x => x.hp <= 0)) setTimeout(() => { const keep = [bgIdx, bgShownAt]; sizePlay(); [bgIdx, bgShownAt] = keep; }, 900);
+    }
+  });
+  sparks = sparks.filter(p => (p.l -= dt) > 0);
+  sparks.forEach(p => { p.x += p.vx*dt; p.y += p.vy*dt; px.fillStyle = `rgba(255,181,71,${p.l/400})`; px.fillRect(p.x, p.y, 2, 2); });
+  px.save(); px.translate(ship.x, ship.y);
+  px.fillStyle = '#e9ecff'; px.beginPath(); px.moveTo(0, -20); px.lineTo(14, 12); px.lineTo(0, 6); px.lineTo(-14, 12); px.closePath(); px.fill();
+  px.strokeStyle = '#090b17'; px.lineWidth = 1; px.stroke();
+  px.fillStyle = '#ffb547'; px.fillRect(-3, 8, 6, 6 + Math.random()*5);
+  px.restore();
+}
+addEventListener('resize', () => { sizeStars(); if (booted) { sizePlay(); } });
+sizeStars(); applyFresh(false); renderForge(); go('home'); requestAnimationFrame(frame);
+</script>
+</body>
+</html>
