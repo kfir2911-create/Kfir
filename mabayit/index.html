@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מה בבית</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1f2a24;--mute:#6b7a72;--ok:#2f8f5b;--okbg:#e4f4ea;--out:#c0392b;--outbg:#fdeceb;--line:#e6e2d8;--accent:#1f5f46}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:80px}
+header{position:sticky;top:0;z-index:5;background:var(--accent);color:#fff;padding:12px 14px 10px;padding-top:max(12px,env(safe-area-inset-top))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{margin:0;font-size:22px}
+.chip{font-size:12px;padding:3px 9px;border-radius:99px;background:rgba(255,255,255,.18)}
+.iconbtn{background:rgba(255,255,255,.18);border:0;color:#fff;font-size:18px;border-radius:10px;padding:6px 10px}
+.search{width:100%;margin-top:10px;padding:10px 12px;border-radius:10px;border:0;font-size:16px}
+.tabs{display:flex;gap:6px;margin-top:10px}
+.tab{flex:1;border:0;padding:8px 4px;border-radius:10px;background:rgba(255,255,255,.15);color:#fff;font-size:14px}
+.tab.on{background:#fff;color:var(--accent);font-weight:700}
+main{padding:12px}
+.banner{background:#fff7e0;border:1px solid #ecd58a;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:14px}
+.banner button{margin-top:6px}
+details{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}
+summary{list-style:none;padding:13px 14px;display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:16px;cursor:pointer}
+summary::-webkit-details-marker{display:none}
+summary .cnt{font-weight:500;font-size:13px;color:var(--mute)}
+summary .cnt.warn{color:var(--out);font-weight:700}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;border-top:1px solid var(--line)}
+.nm{flex:1;font-size:16px}
+.meta{display:block;font-size:12px;color:var(--mute);margin-top:2px}
+.row.out .nm{color:var(--out)}
+.row.out .nm b{text-decoration:line-through;font-weight:500}
+.pill{border:0;border-radius:99px;padding:8px 16px;font-size:15px;font-weight:700;min-width:64px}
+.pill.ok{background:var(--okbg);color:var(--ok)}
+.pill.out{background:var(--outbg);color:var(--out)}
+.del{border:0;background:none;color:var(--mute);font-size:20px;padding:4px 8px}
+.empty{text-align:center;color:var(--mute);padding:30px 10px}
+button.main{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 14px;font-size:15px}
+button.sec{background:#fff;color:var(--accent);border:1px solid var(--accent);border-radius:10px;padding:10px 14px;font-size:15px}
+.fab{position:fixed;bottom:18px;left:18px;width:56px;height:56px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-size:30px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;z-index:20}
+.sheet.show{display:flex}
+.panel{background:#fff;width:100%;max-height:90vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+.panel h2{margin:0 0 10px;font-size:18px}
+.panel label{display:block;margin:10px 0 4px;font-size:14px;color:var(--mute)}
+.panel input,.panel select,.panel textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:16px;font-family:inherit}
+.panel textarea{height:110px;direction:ltr;font-size:13px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.small{font-size:13px;color:var(--mute);margin-top:8px;line-height:1.5}
+.shopcat{font-weight:700;margin:14px 14px 4px;color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1>🏠 מה בבית</h1>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span class="chip" id="status">מקומי</span>
+      <button class="iconbtn" id="editBtn" title="עריכה">✎</button>
+      <button class="iconbtn" id="setBtn" title="הגדרות">⚙</button>
+    </div>
+  </div>
+  <input class="search" id="q" placeholder="חיפוש מוצר…" type="search">
+  <div class="tabs">
+    <button class="tab on" data-f="all">הכל</button>
+    <button class="tab" data-f="ok">יש</button>
+    <button class="tab" data-f="out">אזל</button>
+  </div>
+</header>
+<main id="main"></main>
+<button class="fab" id="addBtn" title="הוספת מוצר">+</button>
+
+<div class="sheet" id="addSheet"><div class="panel">
+  <h2>הוספת מוצר</h2>
+  <label>שם המוצר</label><input id="addName">
+  <label>קטגוריה</label><select id="addCat"></select>
+  <div class="btns"><button class="main" id="addOk">הוסף</button><button class="sec" data-close>סגור</button></div>
+</div></div>
+
+<div class="sheet" id="setSheet"><div class="panel">
+  <h2>הגדרות</h2>
+  <label>השם שלי (יוצג ליד "אזל")</label><input id="myName">
+  <label>חיבור Firebase (הדבק את אובייקט ה-firebaseConfig של הפרויקט)</label>
+  <textarea id="cfgTxt" placeholder='{ apiKey: "...", authDomain: "...", projectId: "...", appId: "..." }'></textarea>
+  <div class="btns">
+    <button class="main" id="saveCfg">שמור וחבר</button>
+    <button class="sec" id="copyLink">העתק קישור לבני הבית</button>
+  </div>
+  <div class="btns">
+    <button class="sec" id="seedBtn">טען רשימה ראשונית</button>
+    <button class="sec" id="resetBtn">סמן הכל כ"יש"</button>
+    <button class="sec" data-close>סגור</button>
+  </div>
+  <p class="small">הנתונים נשמרים באוסף נפרד בשם <b>mabayit_items</b>, ולא נוגעים בשאר הנתונים בפרויקט. הקישור לבני הבית כולל את פרטי החיבור, כך שמספיק לפתוח אותו פעם אחת בכל מכשיר.</p>
+</div></div>
+
+<script type="module">
+const CATS=[
+["ירקות",["תפוח אדמה לבן","תפוח אדמה לאפייה","בצל","בצל אדום","גזר","בטטה","קולורבי","סלק","חציל","שומר","פלפל אדום","עגבניה","מלפפון","סלרי חתוך","כרובית","לבבות חסה","פטריות","אבוקדו"]],
+["פירות",["ענבים אדומים","בננות","תפוח חרמון","תפוח סמיט","פומלה אדומה","שזיף אדום","תפוז"]],
+["בשר",["בקר טחון","בקר טחון 1.2 ק\"ג","צוואר בקר","בשר אדום טרי"]],
+["חלב וגבינות",["חלב 3%","גבינה 5%","פרוסות גבינה 28%","דניאלה תות בננה"]],
+["קפואים",["תות שדה קפוא","שעועית ירוקה","תחתיות ארטישוק"]],
+["לחם ויבשים",["פיתות בלדי","קמח לבן","פסטה טורטליני","פסטה בבטה","פסטה פוזילי","קוסקוס","קינואה","כוסמת","שקדי מרק"]],
+["שמנים, רטבים וממרחים",["שמן זית","שמן קנולה","רוטב עגבניות","קטשופ","טחינה","חומוס","מטבוחה"]],
+["שימורים",["טונה בשמן","חצאי אפרסק","קוקטייל פירות","ליצ'י","זית סורי","מלפפון במלח"]],
+["חטיפים ומתוקים",["נטיפי צ'יפס שוקו","בפלות שוקולד","נשנושי בצל","פתיבר קלאסי"]],
+["חליטות",["חליטת פירות","חליטת מנטה"]],
+["ניקיון וטיפוח",["דאודורנט אקס","דאו ספריי דאב אורגין","דאו ספריי דאב טלק","דאו ספריי דאב מיסטיק","שקיות רב-שימוש","שקיות גופיה"]]
+];
+const $=s=>document.querySelector(s);
+const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
+let items=[],filter="all",edit=false,mode="local",db=null,fs=null,seededOnce=false;
+
+// ---- config (from link hash or storage)
+(function(){
+  const m=location.hash.match(/cfg=([^&]+)/);
+  if(m){try{const c=JSON.parse(decodeURIComponent(escape(atob(m[1]))));LS("mb_cfg",JSON.stringify(c));history.replaceState(null,"",location.pathname+location.search)}catch(e){}}
+})();
+const getCfg=()=>{try{return JSON.parse(LS("mb_cfg")||"null")}catch(e){return null}};
+const me=()=>LS("mb_name")||"";
+const seedList=()=>CATS.flatMap(([c,arr],ci)=>arr.map((n,i)=>({id:"s"+ci+"_"+i,name:n,cat:c,out:false,by:"",ts:0})));
+
+// ---- store
+async function connect(){
+  const cfg=getCfg();
+  if(!cfg||!cfg.projectId){mode="local";loadLocal();return}
+  try{
+    const V="10.12.2";
+    const app=await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
+    fs=await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
+    const a=app.initializeApp(cfg,"mabayit");
+    db=fs.getFirestore(a);
+    mode="cloud";setStatus("מחובר");
+    fs.onSnapshot(fs.collection(db,"mabayit_items"),snap=>{
+      items=snap.docs.map(d=>({id:d.id,...d.data()}));
+      render();
+    },err=>{console.error(err);setStatus("שגיאת חיבור");mode="local";loadLocal()});
+  }catch(e){console.error(e);setStatus("שגיאת חיבור");mode="local";loadLocal()}
+}
+function loadLocal(){
+  let s=null;try{s=JSON.parse(LS("mb_items")||"null")}catch(e){}
+  items=s||seedList();
+  if(!s)LS("mb_items",JSON.stringify(items));
+  if(mode==="local")setStatus("מקומי");
+  render();
+}
+async function save(it){
+  if(mode==="cloud"){
+    const {id,...data}=it;
+    await fs.setDoc(fs.doc(db,"mabayit_items",id),data);
+  }else{
+    const i=items.findIndex(x=>x.id===it.id);
+    if(i>=0)items[i]=it;else items.push(it);
+    LS("mb_items",JSON.stringify(items));render();
+  }
+}
+async function remove(id){
+  if(mode==="cloud")await fs.deleteDoc(fs.doc(db,"mabayit_items",id));
+  else{items=items.filter(x=>x.id!==id);LS("mb_items",JSON.stringify(items));render()}
+}
+async function seedCloud(){
+  if(mode!=="cloud"){items=seedList();LS("mb_items",JSON.stringify(items));render();return}
+  const b=fs.writeBatch(db);
+  seedList().forEach(({id,...d})=>b.set(fs.doc(db,"mabayit_items",id),d));
+  await b.commit();
+}
+function setStatus(t){$("#status").textContent=t}
+
+// ---- helpers
+function ago(ts){
+  if(!ts)return"";const m=Math.round((Date.now()-ts)/60000);
+  if(m<1)return"עכשיו";if(m<60)return`לפני ${m} דק׳`;
+  const h=Math.round(m/60);if(h<24)return`לפני ${h} שע׳`;
+  return`לפני ${Math.round(h/24)} ימים`;
+}
+function el(t,c,txt){const e=document.createElement(t);if(c)e.className=c;if(txt!==undefined)e.textContent=txt;return e}
+async function toggle(it){
+  if(!me()){const n=prompt("מה השם שלך? (יוצג ליד 'אזל')");if(n)LS("mb_name",n.trim())}
+  const out=!it.out;
+  await save({...it,out,by:out?me():"",ts:Date.now()});
+}
+function cats(){
+  const base=CATS.map(c=>c[0]);
+  items.forEach(i=>{if(!base.includes(i.cat))base.push(i.cat)});
+  return base;
+}
+
+// ---- render
+function render(){
+  const main=$("#main");main.textContent="";
+  const q=$("#q").value.trim();
+  if(mode==="cloud"&&items.length===0){
+    const b=el("div","banner","הרשימה בענן ריקה.");
+    const btn=el("button","main","טען רשימה ראשונית (70 מוצרים)");btn.onclick=seedCloud;
+    b.append(el("br"),btn);main.append(b);
+  }
+  const outCount=items.filter(i=>i.out).length;
+  $('[data-f="out"]').textContent=outCount?`אזל (${outCount})`:"אזל";
+  if(filter==="out"){renderShop(main,q);return}
+  let any=false;
+  cats().forEach(cat=>{
+    const all=items.filter(i=>i.cat===cat);
+    let list=all.filter(i=>(!q||i.name.includes(q))&&(filter==="all"||(filter==="ok"&&!i.out)));
+    if(!list.length)return;any=true;
+    const d=el("details");d.open=!!q||filter!=="all"||LS("mb_open_"+cat)==="1";
+    d.addEventListener("toggle",()=>LS("mb_open_"+cat,d.open?"1":"0"));
+    const s=el("summary");
+    const o=all.filter(i=>i.out).length;
+    s.append(el("span","",cat),el("span","cnt"+(o?" warn":""),o?`${o} אזלו · ${all.length-o}/${all.length} יש`:`${all.length} יש`));
+    d.append(s);
+    list.forEach(it=>d.append(row(it)));
+    main.append(d);
+  });
+  if(!any)main.append(el("div","empty","לא נמצאו מוצרים"));
+}
+function row(it){
+  const r=el("div","row"+(it.out?" out":""));
+  const n=el("div","nm");n.append(el("b","",it.name));
+  if(it.out&&(it.by||it.ts))n.append(el("span","meta",`${it.by?it.by+" · ":""}${ago(it.ts)}`));
+  const p=el("button","pill "+(it.out?"out":"ok"),it.out?"אזל":"יש");
+  p.onclick=()=>toggle(it);
+  r.append(n);
+  if(edit){const x=el("button","del","×");x.onclick=()=>{if(confirm(`למחוק את "${it.name}"?`))remove(it.id)};r.append(x)}
+  r.append(p);return r;
+}
+function renderShop(main,q){
+  const out=items.filter(i=>i.out&&(!q||i.name.includes(q)));
+  if(!out.length){main.append(el("div","empty","הכל יש בבית 🎉"));return}
+  const wrap=el("div");wrap.style.cssText="background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden";
+  cats().forEach(cat=>{
+    const l=out.filter(i=>i.cat===cat);if(!l.length)return;
+    wrap.append(el("div","shopcat",cat));l.forEach(it=>wrap.append(row(it)));
+  });
+  main.append(wrap);
+  const b=el("button","main","העתק רשימת קניות (לוואטסאפ)");b.style.marginTop="12px";
+  b.onclick=async()=>{
+    const t="🛒 חסר בבית:\n"+cats().map(c=>{const l=out.filter(i=>i.cat===c);return l.length?`\n*${c}*\n`+l.map(i=>"• "+i.name).join("\n"):""}).join("");
+    try{await navigator.clipboard.writeText(t);b.textContent="הועתק ✓"}catch(e){prompt("העתק:",t)}
+  };
+  main.append(b);
+}
+
+// ---- events
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));t.classList.add("on");filter=t.dataset.f;render();
+});
+$("#q").oninput=render;
+$("#editBtn").onclick=()=>{edit=!edit;$("#editBtn").style.background=edit?"#fff":"";$("#editBtn").style.color=edit?"var(--accent)":"#fff";render()};
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest(".sheet").classList.remove("show"));
+document.querySelectorAll(".sheet").forEach(s=>s.addEventListener("click",e=>{if(e.target===s)s.classList.remove("show")}));
+$("#addBtn").onclick=()=>{
+  $("#addCat").textContent="";cats().forEach(c=>{const o=el("option","",c);o.value=c;$("#addCat").append(o)});
+  $("#addName").value="";$("#addSheet").classList.add("show");setTimeout(()=>$("#addName").focus(),50);
+};
+$("#addOk").onclick=async()=>{
+  const name=$("#addName").value.trim();if(!name)return;
+  await save({id:"u"+Date.now().toString(36),name,cat:$("#addCat").value,out:false,by:"",ts:0});
+  $("#addSheet").classList.remove("show");
+};
+$("#setBtn").onclick=()=>{
+  $("#myName").value=me();const c=getCfg();$("#cfgTxt").value=c?JSON.stringify(c,null,1):"";
+  $("#setSheet").classList.add("show");
+};
+$("#myName").onchange=e=>LS("mb_name",e.target.value.trim());
+$("#saveCfg").onclick=()=>{
+  const t=$("#cfgTxt").value;const cfg={};
+  for(const m of t.matchAll(/["']?(\w+)["']?\s*:\s*["']([^"']*)["']/g))cfg[m[1]]=m[2];
+  if(!cfg.projectId){alert("לא נמצא projectId בהגדרות שהודבקו");return}
+  LS("mb_cfg",JSON.stringify(cfg));location.reload();
+};
+$("#copyLink").onclick=async()=>{
+  const c=getCfg();if(!c){alert("קודם שמור חיבור Firebase");return}
+  const link=location.origin+location.pathname+"#cfg="+btoa(unescape(encodeURIComponent(JSON.stringify(c))));
+  try{await navigator.clipboard.writeText(link);$("#copyLink").textContent="הקישור הועתק ✓"}catch(e){prompt("העתק את הקישור:",link)}
+};
+$("#seedBtn").onclick=async()=>{if(confirm("לטעון את הרשימה הראשונית? מוצרים עם אותו מזהה יאופסו ל'יש'."))await seedCloud()};
+$("#resetBtn").onclick=async()=>{
+  if(!confirm("לסמן את כל המוצרים כ'יש'?"))return;
+  for(const it of items.filter(i=>i.out))await save({...it,out:false,by:"",ts:Date.now()});
+};
+connect();
+</script>
+</body>
+</html>
